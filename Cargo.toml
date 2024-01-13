@@ -1,0 +1,19 @@
+[package]
+name = "four_win_three_lose"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "brute_force"
+harness = false
+
+[profile.bench]
+debug = true
+
+[dependencies]
+itertools = "0.12.0"
