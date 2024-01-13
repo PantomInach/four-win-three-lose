@@ -11,12 +11,7 @@ fn branch_all_possible_moves(c: &mut Criterion) {
     c.bench_function("All moves: upper half filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, f, f, t, t, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_moves);
         })
     });
 
@@ -25,12 +20,7 @@ fn branch_all_possible_moves(c: &mut Criterion) {
     slow_group.bench_function("All moves: first row filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, n, n, n, n, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_moves);
         })
     });
 }
@@ -43,12 +33,7 @@ fn branch_unique_x_y_mirrored(c: &mut Criterion) {
     c.bench_function("Neglect x,y mirrored: upper half filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, f, f, t, t, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_non_symmetrical_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_non_symmetrical_moves);
         })
     });
 
@@ -57,12 +42,7 @@ fn branch_unique_x_y_mirrored(c: &mut Criterion) {
     slow_group.bench_function("Neglect x,y mirrored: first row filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, n, n, n, n, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_non_symmetrical_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_non_symmetrical_moves);
         })
     });
 }
@@ -75,12 +55,7 @@ fn branch_symmetric_if_sparse(c: &mut Criterion) {
     c.bench_function("Mix: Upper half filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, f, f, t, t, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_non_symmetrical_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_non_symmetrical_moves);
         })
     });
 
@@ -89,12 +64,7 @@ fn branch_symmetric_if_sparse(c: &mut Criterion) {
     slow_group.bench_function("Mix: first row filled", |b| {
         b.iter(|| {
             let mut field = Field::from([t, t, f, f, n, n, n, n, n, n, n, n, n, n, n, n]);
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &Field::possible_non_symmetrical_moves,
-                &mut HashMap::new(),
-            );
+            field.brute_force_game_state(false, false, &Field::possible_non_symmetrical_moves);
         })
     });
 }

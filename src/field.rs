@@ -289,7 +289,24 @@ impl Field {
 
     /// Setting [evaluate_for] and [player_turn] to opposites will make the player try to lose the
     /// game.
-    pub fn brute_force_game_state_recursive<F>(
+    pub fn brute_force_game_state<F>(
+        &mut self,
+        evaluate_for: bool,
+        player_turn: bool,
+        move_selector: &F,
+    ) -> GameResult
+    where
+        F: Fn(&Field) -> Option<Vec<Position>>,
+    {
+        self.brute_force_game_state_recursivly(
+            evaluate_for,
+            player_turn,
+            move_selector,
+            &mut HashMap::new(),
+        )
+    }
+
+    fn brute_force_game_state_recursivly<F>(
         &mut self,
         evaluate_for: bool,
         player_turn: bool,
@@ -300,14 +317,10 @@ impl Field {
         F: Fn(&Field) -> Option<Vec<Position>>,
     {
         if let Some(winner) = self.winner() {
-            let res = GameResult::from(winner);
-            game_cash.insert(self.field, res);
-            return res;
+            return GameResult::from(winner);
         }
         if let Some(loser) = self.loser() {
-            let res = GameResult::from(loser).opposite_player();
-            game_cash.insert(self.field, res);
-            return res;
+            return GameResult::from(loser).opposite_player();
         }
 
         if let Some(res) = game_cash.get(&self.field) {
@@ -317,14 +330,14 @@ impl Field {
         let best_move: (Position, GameResult) =
             ((0, 0), GameResult::from(evaluate_for).opposite_player());
 
-        match move_selector(self) {
+        let res = match move_selector(self) {
             None => GameResult::Draw,
             Some(possible_moves) => {
                 possible_moves
                     .iter()
                     .fold(best_move, |(best_pos, game_res), pos| {
                         let _ = self.set(pos.0, pos.1, player_turn);
-                        let rec_res = self.brute_force_game_state_recursive(
+                        let rec_res = self.brute_force_game_state_recursivly(
                             !evaluate_for,
                             !player_turn,
                             move_selector,
@@ -340,7 +353,9 @@ impl Field {
                     })
                     .1
             }
-        }
+        };
+        game_cash.insert(self.field, res);
+        res
     }
 }
 
@@ -741,24 +756,14 @@ mod tests {
             field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, t]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &move_selector,
-                &mut HashMap::new()
-            ),
+            field.brute_force_game_state(false, false, &move_selector),
             GameResult::Draw
         );
         let mut field = Field {
             field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(
-                false,
-                true,
-                &move_selector,
-                &mut HashMap::new()
-            ),
+            field.brute_force_game_state(false, true, &move_selector),
             GameResult::Draw
         );
 
@@ -766,12 +771,7 @@ mod tests {
             field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &move_selector,
-                &mut HashMap::new()
-            ),
+            field.brute_force_game_state(false, false, &move_selector),
             GameResult::Draw
         );
         // let mut field = Field {
@@ -785,7 +785,7 @@ mod tests {
             field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(true, true, &move_selector, &mut HashMap::new()),
+            field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerTwoWins
         );
 
@@ -793,19 +793,14 @@ mod tests {
             field: [[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(true, true, &move_selector, &mut HashMap::new()),
+            field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerTwoWins
         );
         let mut field = Field {
             field: [[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &move_selector,
-                &mut HashMap::new()
-            ),
+            field.brute_force_game_state(false, false, &move_selector),
             GameResult::PlayerTwoWins
         );
 
@@ -813,19 +808,14 @@ mod tests {
             field: [[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(
-                false,
-                false,
-                &move_selector,
-                &mut HashMap::new()
-            ),
+            field.brute_force_game_state(false, false, &move_selector),
             GameResult::PlayerOneWins
         );
         let mut field = Field {
             field: [[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]],
         };
         assert_eq!(
-            field.brute_force_game_state_recursive(true, true, &move_selector, &mut HashMap::new()),
+            field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerOneWins
         );
     }
