@@ -1,5 +1,8 @@
 use std::{collections::HashMap, fmt::Display};
 
+use itertools::FoldWhile::{Continue, Done};
+use itertools::Itertools;
+
 pub(crate) type Position = (usize, usize);
 
 // Changing these values will break the current implementations of [winner] and [loser].
@@ -335,7 +338,7 @@ impl Field {
             Some(possible_moves) => {
                 possible_moves
                     .iter()
-                    .fold(best_move, |(best_pos, game_res), pos| {
+                    .fold_while(best_move, |(best_pos, game_res), pos| {
                         let _ = self.set(pos.0, pos.1, player_turn);
                         let rec_res = self.brute_force_game_state_recursivly(
                             !evaluate_for,
@@ -345,12 +348,15 @@ impl Field {
                         );
                         let _ = self.force_set(pos.0, pos.1, None);
 
-                        if rec_res.better_eq_for_player(&game_res, evaluate_for) {
-                            (*pos, rec_res)
+                        if rec_res == GameResult::from(evaluate_for) {
+                            Done((*pos, rec_res))
+                        } else if rec_res.better_eq_for_player(&game_res, evaluate_for) {
+                            Continue((*pos, rec_res))
                         } else {
-                            (best_pos, game_res)
+                            Continue((best_pos, game_res))
                         }
                     })
+                    .into_inner()
                     .1
             }
         };
