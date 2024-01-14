@@ -1,5 +1,6 @@
 use field::GameResult;
 
+mod brute_force_field;
 pub mod field;
 mod player;
 mod visualizer;

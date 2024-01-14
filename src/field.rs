@@ -256,7 +256,7 @@ impl Field {
 }
 
 #[cfg(test)]
-mod tests {
+mod field_tests {
     use super::*;
 
     #[test]
