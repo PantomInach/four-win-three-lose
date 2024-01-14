@@ -50,6 +50,16 @@ impl From<bool> for GameResult {
         }
     }
 }
+impl Display for GameResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            GameResult::Draw => "Draw! Nobody wins.",
+            GameResult::PlayerOneWins => "Player One wins!",
+            GameResult::PlayerTwoWins => "Player Two wins!",
+        };
+        write!(f, "{}", message)
+    }
+}
 impl GameResult {
     fn player_to_result(player: Option<bool>) -> GameResult {
         match player {
