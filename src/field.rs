@@ -1,13 +1,7 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
-use itertools::FoldWhile::{Continue, Done};
-use itertools::Itertools;
-
-pub(crate) type Position = (usize, usize);
-
-// Changing these values will break the current implementations of [winner] and [loser].
-const FIELD_X: usize = 4;
-const FIELD_Y: usize = 4;
+use crate::FIELD_X;
+use crate::FIELD_Y;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum FieldErrors {
@@ -70,7 +64,7 @@ impl GameResult {
         }
     }
 
-    fn opposite_player(&self) -> GameResult {
+    pub(crate) fn opposite_player(&self) -> GameResult {
         match self {
             GameResult::Draw => GameResult::Draw,
             GameResult::PlayerOneWins => GameResult::PlayerTwoWins,
@@ -78,7 +72,7 @@ impl GameResult {
         }
     }
 
-    fn better_eq_for_player(&self, other: &GameResult, evaluate_for: bool) -> bool {
+    pub(crate) fn better_eq_for_player(&self, other: &GameResult, evaluate_for: bool) -> bool {
         if self == other {
             true
         } else if self == &GameResult::from(evaluate_for) {
@@ -137,19 +131,19 @@ impl Field {
         }
     }
 
-    fn mirror_x(&self) -> Field {
+    pub(crate) fn mirror_x(&self) -> Field {
         let mut mirrored_field = *self;
         mirrored_field.field.reverse();
         mirrored_field
     }
 
-    fn mirror_y(&self) -> Field {
+    pub(crate) fn mirror_y(&self) -> Field {
         let mut mirrored_field = *self;
         mirrored_field.field.iter_mut().for_each(|v| v.reverse());
         mirrored_field
     }
 
-    fn set_pieces(&self) -> usize {
+    pub(crate) fn set_pieces(&self) -> usize {
         self.field.iter().map(|v| v.iter().flatten().count()).sum()
     }
 
@@ -258,128 +252,6 @@ impl Field {
         }
 
         None
-    }
-
-    pub fn possible_moves(&self) -> Option<Vec<Position>> {
-        let possible_moves: Vec<Position> = (0..FIELD_X)
-            .flat_map(|x| {
-                (0..FIELD_Y)
-                    .map(move |y| (x, y))
-                    .filter(|(x, y)| self.field[*y][*x].is_none())
-            })
-            .collect();
-        (!possible_moves.is_empty()).then_some(possible_moves)
-    }
-
-    pub fn possible_non_symmetrical_moves(&self) -> Option<Vec<Position>> {
-        let mut res: Vec<(Position, Field)> = Vec::new();
-        if let Some(positions) = self.possible_moves() {
-            positions
-                .into_iter()
-                .map(|pos| {
-                    let mut field = *self;
-                    let _ = field.set(pos.0, pos.1, false);
-                    (pos, field)
-                })
-                .for_each(|(pos, field)| {
-                    if !res.iter().any(|(_, f)| {
-                        f == &field.mirror_x()
-                            || f == &field.mirror_y()
-                            || f == &field.mirror_x().mirror_y()
-                    }) {
-                        res.push((pos, field));
-                    }
-                });
-        };
-        if res.is_empty() {
-            None
-        } else {
-            Some(res.into_iter().map(|(p, _)| p).collect())
-        }
-    }
-
-    /// The additional level of redirection makes the program drastically slower. Probably some
-    /// optimization is not done by the compiler.
-    pub fn possible_moves_symmetrical_if_sparse(&self) -> Option<Vec<Position>> {
-        if self.set_pieces() > 5 {
-            self.possible_moves()
-        } else {
-            self.possible_moves_symmetrical_if_sparse()
-        }
-    }
-
-    /// Setting [evaluate_for] and [player_turn] to opposites will make the player try to lose the
-    /// game.
-    pub fn brute_force_game_state<F>(
-        &mut self,
-        evaluate_for: bool,
-        player_turn: bool,
-        move_selector: &F,
-    ) -> GameResult
-    where
-        F: Fn(&Field) -> Option<Vec<Position>>,
-    {
-        self.brute_force_game_state_recursivly(
-            evaluate_for,
-            player_turn,
-            move_selector,
-            &mut HashMap::new(),
-        )
-    }
-
-    fn brute_force_game_state_recursivly<F>(
-        &mut self,
-        evaluate_for: bool,
-        player_turn: bool,
-        move_selector: &F,
-        game_cash: &mut HashMap<[[Option<bool>; FIELD_X]; FIELD_Y], GameResult>,
-    ) -> GameResult
-    where
-        F: Fn(&Field) -> Option<Vec<Position>>,
-    {
-        if let Some(winner) = self.winner() {
-            return GameResult::from(winner);
-        }
-        if let Some(loser) = self.loser() {
-            return GameResult::from(loser).opposite_player();
-        }
-
-        if let Some(res) = game_cash.get(&self.field) {
-            return *res;
-        }
-
-        let best_move: (Position, GameResult) =
-            ((0, 0), GameResult::from(evaluate_for).opposite_player());
-
-        let res = match move_selector(self) {
-            None => GameResult::Draw,
-            Some(possible_moves) => {
-                possible_moves
-                    .iter()
-                    .fold_while(best_move, |(best_pos, game_res), pos| {
-                        let _ = self.set(pos.0, pos.1, player_turn);
-                        let rec_res = self.brute_force_game_state_recursivly(
-                            !evaluate_for,
-                            !player_turn,
-                            move_selector,
-                            game_cash,
-                        );
-                        let _ = self.force_set(pos.0, pos.1, None);
-
-                        if rec_res == GameResult::from(evaluate_for) {
-                            Done((*pos, rec_res))
-                        } else if rec_res.better_eq_for_player(&game_res, evaluate_for) {
-                            Continue((*pos, rec_res))
-                        } else {
-                            Continue((best_pos, game_res))
-                        }
-                    })
-                    .into_inner()
-                    .1
-            }
-        };
-        game_cash.insert(self.field, res);
-        res
     }
 }
 
@@ -602,165 +474,6 @@ mod tests {
         assert_eq!(field.loser(), t);
         let field = Field::from([[n, n, n, n], [n, n, n, t], [n, n, t, n], [n, t, n, n]]);
         assert_eq!(field.loser(), t);
-    }
-
-    #[test]
-    fn possible_moves() {
-        let t = Some(true);
-        let f = Some(false);
-        let n: Option<bool> = None;
-        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
-        assert_eq!(
-            field.possible_moves(),
-            Some(vec![
-                (0, 0),
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 0),
-                (1, 1),
-                (1, 2),
-                (1, 3),
-                (2, 0),
-                (2, 1),
-                (2, 2),
-                (2, 3),
-                (3, 0),
-                (3, 1),
-                (3, 2),
-                (3, 3)
-            ])
-        );
-        let field = Field::from([[f, f, f, f], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
-        assert_eq!(
-            field.possible_moves(),
-            Some(vec![
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 1),
-                (1, 2),
-                (1, 3),
-                (2, 1),
-                (2, 2),
-                (2, 3),
-                (3, 1),
-                (3, 2),
-                (3, 3)
-            ])
-        );
-        let field = Field::from([[f, n, n, n], [n, f, n, n], [n, n, f, n], [n, n, n, f]]);
-        assert_eq!(
-            field.possible_moves(),
-            Some(vec![
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 0),
-                (1, 2),
-                (1, 3),
-                (2, 0),
-                (2, 1),
-                (2, 3),
-                (3, 0),
-                (3, 1),
-                (3, 2),
-            ])
-        );
-        let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, n]]);
-        assert_eq!(field.possible_moves(), Some(vec![(3, 3),]));
-        let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, t]]);
-        assert_eq!(field.possible_moves(), None);
-    }
-
-    #[test]
-    fn test_possible_moves_symetric() {
-        let _t = Some(true);
-        let _f = Some(false);
-        let n: Option<bool> = None;
-
-        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
-        assert_eq!(
-            field.possible_non_symmetrical_moves(),
-            Some(vec![
-                (0, 0),
-                (0, 1),
-                // (0, 2),
-                // (0, 3),
-                (1, 0),
-                (1, 1),
-                // (1, 2),
-                // (1, 3),
-                // (2, 0),
-                // (2, 1),
-                // (2, 2),
-                // (2, 3),
-                // (3, 0),
-                // (3, 1),
-                // (3, 2),
-                // (3, 3)
-            ])
-        );
-    }
-
-    #[test]
-    fn test_brute_force_game_state() {
-        let f = Some(false);
-        let t = Some(true);
-        let n: Option<bool> = None;
-
-        let move_selector = Field::possible_moves;
-
-        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, t]]);
-        assert_eq!(
-            field.brute_force_game_state(false, false, &move_selector),
-            GameResult::Draw
-        );
-        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, n]]);
-        assert_eq!(
-            field.brute_force_game_state(false, true, &move_selector),
-            GameResult::Draw
-        );
-
-        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]]);
-        assert_eq!(
-            field.brute_force_game_state(false, false, &move_selector),
-            GameResult::Draw
-        );
-        // let mut field = Field {
-        //     field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]],
-        // };
-        // assert_eq!(
-        //     field.brute_force_game_state(true, false),
-        //     GameResult::Draw
-        // );
-        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]]);
-        assert_eq!(
-            field.brute_force_game_state(true, true, &move_selector),
-            GameResult::PlayerTwoWins
-        );
-
-        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]]);
-        assert_eq!(
-            field.brute_force_game_state(true, true, &move_selector),
-            GameResult::PlayerTwoWins
-        );
-        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]]);
-        assert_eq!(
-            field.brute_force_game_state(false, false, &move_selector),
-            GameResult::PlayerTwoWins
-        );
-
-        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]]);
-        assert_eq!(
-            field.brute_force_game_state(false, false, &move_selector),
-            GameResult::PlayerOneWins
-        );
-        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]]);
-        assert_eq!(
-            field.brute_force_game_state(true, true, &move_selector),
-            GameResult::PlayerOneWins
-        );
     }
 
     #[test]
