@@ -61,6 +61,7 @@ impl Display for GameResult {
     }
 }
 impl GameResult {
+    #[allow(dead_code)]
     fn player_to_result(player: Option<bool>) -> GameResult {
         match player {
             None => GameResult::Draw,
@@ -122,6 +123,11 @@ impl From<[Option<bool>; FIELD_X * FIELD_Y]> for Field {
             field[i / 4][i % 4] = v;
         });
         Field { field }
+    }
+}
+impl From<[[Option<bool>; FIELD_X]; FIELD_Y]> for Field {
+    fn from(value: [[Option<bool>; FIELD_X]; FIELD_Y]) -> Self {
+        Field { field: value }
     }
 }
 impl Field {
@@ -292,6 +298,8 @@ impl Field {
         }
     }
 
+    /// The additional level of redirection makes the program drastically slower. Probably some
+    /// optimization is not done by the compiler.
     pub fn possible_moves_symmetrical_if_sparse(&self) -> Option<Vec<Position>> {
         if self.set_pieces() > 5 {
             self.possible_moves()
@@ -408,14 +416,12 @@ mod tests {
     }
 
     fn create_sample_field_empty() -> Field {
-        Field {
-            field: [
-                [None, None, None, None],
-                [None, None, None, None],
-                [None, None, None, None],
-                [None, None, None, None],
-            ],
-        }
+        Field::from([
+            [None, None, None, None],
+            [None, None, None, None],
+            [None, None, None, None],
+            [None, None, None, None],
+        ])
     }
 
     #[test]
@@ -426,9 +432,7 @@ mod tests {
 
         let mut arr = [None; 16];
         let field: Field = arr.into();
-        let empty_f = Field {
-            field: [[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let empty_f = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(empty_f.field, field.field);
 
         arr[0] = Some(false);
@@ -436,9 +440,8 @@ mod tests {
         arr[8] = Some(false);
         arr[12] = Some(true);
         let field: Field = arr.into();
-        let should_be = Field {
-            field: [[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]],
-        };
+        let should_be = Field::from([[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]]);
+
         assert_eq!(should_be.field, field.field);
 
         arr[3] = Some(true);
@@ -446,9 +449,7 @@ mod tests {
         arr[11] = Some(true);
         arr[15] = Some(true);
         let field: Field = arr.into();
-        let should_be = Field {
-            field: [[f, n, n, t], [t, n, n, t], [f, n, n, t], [t, n, n, t]],
-        };
+        let should_be = Field::from([[f, n, n, t], [t, n, n, t], [f, n, n, t], [t, n, n, t]]);
         assert_eq!(should_be.field, field.field);
     }
 
@@ -457,9 +458,7 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let sample_1 = Field {
-            field: [[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]],
-        };
+        let sample_1 = Field::from([[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]]);
 
         let mut field = create_sample_field_empty();
         assert_eq!(Ok(()), field.set(0, 0, false));
@@ -502,9 +501,7 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let sample_1 = Field {
-            field: [[f, n, n, t], [t, n, n, t], [f, n, n, t], [t, n, n, t]],
-        };
+        let sample_1 = Field::from([[f, n, n, t], [t, n, n, t], [f, n, n, t], [t, n, n, t]]);
         assert_eq!(sample_1.set_pieces(), 8_usize);
     }
 
@@ -513,9 +510,7 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let sample_1 = Field {
-            field: [[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]],
-        };
+        let sample_1 = Field::from([[f, n, n, n], [t, n, n, n], [f, n, n, n], [t, n, n, n]]);
         let mut field = sample_1.clone();
 
         assert_eq!(
@@ -559,41 +554,23 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let field = Field {
-            field: [[t, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[t, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(field.winner(), n);
-        let field = Field {
-            field: [[t, n, t, t], [t, n, n, n], [t, n, t, n], [n, t, t, t]],
-        };
+        let field = Field::from([[t, n, t, t], [t, n, n, n], [t, n, t, n], [n, t, t, t]]);
         assert_eq!(field.winner(), n);
-        let field = Field {
-            field: [[t, f, t, t], [t, t, t, n], [t, t, f, n], [f, n, n, t]],
-        };
+        let field = Field::from([[t, f, t, t], [t, t, t, n], [t, t, f, n], [f, n, n, t]]);
         assert_eq!(field.winner(), n);
-        let field = Field {
-            field: [[t, n, n, n], [t, n, n, n], [t, n, n, n], [t, n, n, n]],
-        };
+        let field = Field::from([[t, n, n, n], [t, n, n, n], [t, n, n, n], [t, n, n, n]]);
         assert_eq!(field.winner(), t);
-        let field = Field {
-            field: [[f, n, n, n], [f, n, n, n], [f, n, n, n], [f, n, n, n]],
-        };
+        let field = Field::from([[f, n, n, n], [f, n, n, n], [f, n, n, n], [f, n, n, n]]);
         assert_eq!(field.winner(), f);
-        let field = Field {
-            field: [[t, t, t, t], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[t, t, t, t], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(field.winner(), t);
-        let field = Field {
-            field: [[n, n, n, n], [n, n, n, n], [n, n, n, n], [t, t, t, t]],
-        };
+        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [t, t, t, t]]);
         assert_eq!(field.winner(), t);
-        let field = Field {
-            field: [[t, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, t]],
-        };
+        let field = Field::from([[t, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, t]]);
         assert_eq!(field.winner(), t);
-        let field = Field {
-            field: [[n, n, n, t], [n, n, t, n], [n, t, n, n], [t, n, n, n]],
-        };
+        let field = Field::from([[n, n, n, t], [n, n, t, n], [n, t, n, n], [t, n, n, n]]);
         assert_eq!(field.winner(), t);
     }
 
@@ -602,50 +579,28 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let field = Field {
-            field: [[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(field.loser(), None);
-        let field = Field {
-            field: [[t, t, n, t], [t, n, t, t], [f, n, f, f], [f, f, t, f]],
-        };
+        let field = Field::from([[t, t, n, t], [t, n, t, t], [f, n, f, f], [f, f, t, f]]);
         assert_eq!(field.loser(), None);
-        let field = Field {
-            field: [[t, n, n, t], [n, t, t, n], [n, n, n, n], [t, n, n, t]],
-        };
+        let field = Field::from([[t, n, n, t], [n, t, t, n], [n, n, n, n], [t, n, n, t]]);
         assert_eq!(field.loser(), None);
 
-        let field = Field {
-            field: [[t, t, t, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[t, t, t, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, t, t, t], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[n, t, t, t], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, t, n, n], [n, t, n, n], [n, t, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[n, t, n, n], [n, t, n, n], [n, t, n, n], [n, n, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, n, n, n], [n, t, n, n], [n, t, n, n], [n, t, n, n]],
-        };
+        let field = Field::from([[n, n, n, n], [n, t, n, n], [n, t, n, n], [n, t, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[t, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, n]],
-        };
+        let field = Field::from([[t, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, t]],
-        };
+        let field = Field::from([[n, n, n, n], [n, t, n, n], [n, n, t, n], [n, n, n, t]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, t, n, n], [n, n, t, n], [n, n, n, t], [n, n, n, n]],
-        };
+        let field = Field::from([[n, t, n, n], [n, n, t, n], [n, n, n, t], [n, n, n, n]]);
         assert_eq!(field.loser(), t);
-        let field = Field {
-            field: [[n, n, n, n], [n, n, n, t], [n, n, t, n], [n, t, n, n]],
-        };
+        let field = Field::from([[n, n, n, n], [n, n, n, t], [n, n, t, n], [n, t, n, n]]);
         assert_eq!(field.loser(), t);
     }
 
@@ -654,9 +609,7 @@ mod tests {
         let t = Some(true);
         let f = Some(false);
         let n: Option<bool> = None;
-        let field = Field {
-            field: [[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(
             field.possible_moves(),
             Some(vec![
@@ -678,9 +631,7 @@ mod tests {
                 (3, 3)
             ])
         );
-        let field = Field {
-            field: [[f, f, f, f], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[f, f, f, f], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(
             field.possible_moves(),
             Some(vec![
@@ -698,9 +649,7 @@ mod tests {
                 (3, 3)
             ])
         );
-        let field = Field {
-            field: [[f, n, n, n], [n, f, n, n], [n, n, f, n], [n, n, n, f]],
-        };
+        let field = Field::from([[f, n, n, n], [n, f, n, n], [n, n, f, n], [n, n, n, f]]);
         assert_eq!(
             field.possible_moves(),
             Some(vec![
@@ -718,25 +667,19 @@ mod tests {
                 (3, 2),
             ])
         );
-        let field = Field {
-            field: [[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, n]],
-        };
+        let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, n]]);
         assert_eq!(field.possible_moves(), Some(vec![(3, 3),]));
-        let field = Field {
-            field: [[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, t]],
-        };
+        let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, t]]);
         assert_eq!(field.possible_moves(), None);
     }
 
     #[test]
     fn test_possible_moves_symetric() {
-        let t = Some(true);
-        let f = Some(false);
+        let _t = Some(true);
+        let _f = Some(false);
         let n: Option<bool> = None;
 
-        let field = Field {
-            field: [[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]],
-        };
+        let field = Field::from([[n, n, n, n], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(
             field.possible_non_symmetrical_moves(),
             Some(vec![
@@ -768,24 +711,18 @@ mod tests {
 
         let move_selector = Field::possible_moves;
 
-        let mut field = Field {
-            field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, t]],
-        };
+        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, t]]);
         assert_eq!(
             field.brute_force_game_state(false, false, &move_selector),
             GameResult::Draw
         );
-        let mut field = Field {
-            field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, n]],
-        };
+        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, f, t, n]]);
         assert_eq!(
             field.brute_force_game_state(false, true, &move_selector),
             GameResult::Draw
         );
 
-        let mut field = Field {
-            field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]],
-        };
+        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]]);
         assert_eq!(
             field.brute_force_game_state(false, false, &move_selector),
             GameResult::Draw
@@ -797,39 +734,29 @@ mod tests {
         //     field.brute_force_game_state(true, false),
         //     GameResult::Draw
         // );
-        let mut field = Field {
-            field: [[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]],
-        };
+        let mut field = Field::from([[t, t, f, f], [f, f, t, t], [t, t, f, f], [f, n, t, n]]);
         assert_eq!(
             field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerTwoWins
         );
 
-        let mut field = Field {
-            field: [[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]],
-        };
+        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]]);
         assert_eq!(
             field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerTwoWins
         );
-        let mut field = Field {
-            field: [[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]],
-        };
+        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, f, n], [t, f, n, n]]);
         assert_eq!(
             field.brute_force_game_state(false, false, &move_selector),
             GameResult::PlayerTwoWins
         );
 
-        let mut field = Field {
-            field: [[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]],
-        };
+        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]]);
         assert_eq!(
             field.brute_force_game_state(false, false, &move_selector),
             GameResult::PlayerOneWins
         );
-        let mut field = Field {
-            field: [[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]],
-        };
+        let mut field = Field::from([[t, f, t, f], [t, t, f, t], [f, t, n, n], [t, f, n, n]]);
         assert_eq!(
             field.brute_force_game_state(true, true, &move_selector),
             GameResult::PlayerOneWins
@@ -842,17 +769,11 @@ mod tests {
         let t = Some(true);
         let n: Option<bool> = None;
 
-        let field = Field {
-            field: [[t, f, n, n], [n, t, f, n], [n, n, t, f], [f, n, n, t]],
-        };
-        let mirror_x = Field {
-            field: [[f, n, n, t], [n, n, t, f], [n, t, f, n], [t, f, n, n]],
-        };
+        let field = Field::from([[t, f, n, n], [n, t, f, n], [n, n, t, f], [f, n, n, t]]);
+        let mirror_x = Field::from([[f, n, n, t], [n, n, t, f], [n, t, f, n], [t, f, n, n]]);
         assert_eq!(field.mirror_x(), mirror_x);
 
-        let mirror_y = Field {
-            field: [[n, n, f, t], [n, f, t, n], [f, t, n, n], [t, n, n, f]],
-        };
+        let mirror_y = Field::from([[n, n, f, t], [n, f, t, n], [f, t, n, n], [t, n, n, f]]);
         assert_eq!(field.mirror_y(), mirror_y);
     }
 }
