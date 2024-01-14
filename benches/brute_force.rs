@@ -99,15 +99,15 @@ fn branch_symmetric_if_sparse(c: &mut Criterion) {
         })
     });
 
-    let mut slow_group = c.benchmark_group("slow_group");
-    slow_group.sample_size(10);
-    slow_group.bench_function("Mix: first row filled", |b| {
-        let field = Field::from([t, t, f, f, n, n, n, n, n, n, n, n, n, n, n, n]);
-        b.iter(|| {
-            let mut f = field.clone();
-            f.brute_force_game_state(false, false, &Field::possible_moves_symmetrical_if_sparse);
-        })
-    });
+    // let mut slow_group = c.benchmark_group("slow_group");
+    // slow_group.sample_size(10);
+    // slow_group.bench_function("Mix: first row filled", |b| {
+    //     let field = Field::from([t, t, f, f, n, n, n, n, n, n, n, n, n, n, n, n]);
+    //     b.iter(|| {
+    //         let mut f = field.clone();
+    //         f.brute_force_game_state(false, false, &Field::possible_moves_symmetrical_if_sparse);
+    //     })
+    // });
 }
 
 criterion_group!(
