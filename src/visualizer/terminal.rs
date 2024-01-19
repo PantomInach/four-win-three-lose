@@ -2,7 +2,7 @@ use super::BoardVisualizer;
 
 struct TerminalVisualizer {}
 impl BoardVisualizer for TerminalVisualizer {
-    fn draw_field(field: &crate::field::Field) {
+    fn draw_field(&self, field: &crate::field::Field) {
         coordinate_header();
         field
             .field
@@ -16,7 +16,7 @@ impl BoardVisualizer for TerminalVisualizer {
             });
     }
 
-    fn players_turn(player_turn: bool) {
+    fn players_turn(&self, player_turn: bool) {
         println!("\n");
         match player_turn {
             false => println!("It's player one's turn..."),
@@ -25,7 +25,7 @@ impl BoardVisualizer for TerminalVisualizer {
         println!("\n");
     }
 
-    fn display_result(result: crate::field::GameResult) {
+    fn display_result(&self, result: crate::field::GameResult) {
         println!("{}", result);
     }
 }
