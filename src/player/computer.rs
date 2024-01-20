@@ -24,25 +24,32 @@ impl GamePlayer for ComputerPlayer {
             None => panic!("The computer player is expected to do a move, but no moves available. Current Field:\n{}", field),
         }
     }
+
+    fn invalid_move(&self, field: &Field, pos: Position) {
+        panic!("The computer can't make an invalid move.")
+    }
 }
 impl ComputerPlayer {
     /// This is just a reimplementation of [Field::brute_force_game_state_recursivly].
     fn get_best_move(&self, field: &mut Field, moves: &Vec<Position>) -> Position {
         let move_selector = Field::possible_moves;
         let mut game_cash = HashMap::new();
-        let best_move: NextBestMove = ((0, 0), GameResult::from(self.player).opposite_player());
+        let best_move: NextBestMove = (
+            (0, 0).into(),
+            GameResult::from(self.player).opposite_player(),
+        );
 
         moves
             .iter()
             .fold_while(best_move, |(best_pos, game_res), pos| {
-                let _ = field.set(pos.0, pos.1, self.player);
+                let _ = field.set(pos.x, pos.y, self.player);
                 let rec_res = field.brute_force_game_state_recursivly(
                     !self.player,
                     !self.player,
                     &move_selector,
                     &mut game_cash,
                 );
-                let _ = field.force_set(pos.0, pos.1, None);
+                let _ = field.force_set(pos.x, pos.y, None);
                 if rec_res == GameResult::from(self.player) {
                     Done((*pos, rec_res))
                 } else if rec_res.better_eq_for_player(&game_res, self.player) {
@@ -68,6 +75,6 @@ mod test_computer_player {
         let n: Option<bool> = None;
 
         let field = Field::from([[f, f, t, t], [t, t, f, f], [f, t, n, t], [f, f, n, f]]);
-        assert_eq!(player.make_move(&field), (2, 3));
+        assert_eq!(player.make_move(&field), (2, 3).into());
     }
 }

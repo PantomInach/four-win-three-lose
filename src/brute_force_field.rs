@@ -14,8 +14,8 @@ impl Field {
         let possible_moves: Vec<Position> = (0..FIELD_X)
             .flat_map(|x| {
                 (0..FIELD_Y)
-                    .map(move |y| (x, y))
-                    .filter(|(x, y)| self.field[*y][*x].is_none())
+                    .map(move |y| Position::from((x, y)))
+                    .filter(|pos| self.field[pos.y][pos.x].is_none())
             })
             .collect();
         (!possible_moves.is_empty()).then_some(possible_moves)
@@ -28,7 +28,7 @@ impl Field {
                 .into_iter()
                 .map(|pos| {
                     let mut field = *self;
-                    let _ = field.set(pos.0, pos.1, false);
+                    let _ = field.set(pos.x, pos.y, false);
                     (pos, field)
                 })
                 .for_each(|(pos, field)| {
@@ -98,7 +98,10 @@ impl Field {
             return *res;
         }
 
-        let best_move: NextBestMove = ((0, 0), GameResult::from(evaluate_for).opposite_player());
+        let best_move: NextBestMove = (
+            (0, 0).into(),
+            GameResult::from(evaluate_for).opposite_player(),
+        );
 
         let res = match move_selector(self) {
             None => GameResult::Draw,
@@ -106,14 +109,14 @@ impl Field {
                 possible_moves
                     .iter()
                     .fold_while(best_move, |(best_pos, game_res), pos| {
-                        let _ = self.set(pos.0, pos.1, player_turn);
+                        let _ = self.set(pos.x, pos.y, player_turn);
                         let rec_res = self.brute_force_game_state_recursivly(
                             !evaluate_for,
                             !player_turn,
                             move_selector,
                             game_cash,
                         );
-                        let _ = self.force_set(pos.0, pos.1, None);
+                        let _ = self.force_set(pos.x, pos.y, None);
 
                         if rec_res == GameResult::from(evaluate_for) {
                             Done((*pos, rec_res))
@@ -145,62 +148,62 @@ mod test_brute_force {
         assert_eq!(
             field.possible_moves(),
             Some(vec![
-                (0, 0),
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 0),
-                (1, 1),
-                (1, 2),
-                (1, 3),
-                (2, 0),
-                (2, 1),
-                (2, 2),
-                (2, 3),
-                (3, 0),
-                (3, 1),
-                (3, 2),
-                (3, 3)
+                (0, 0).into(),
+                (0, 1).into(),
+                (0, 2).into(),
+                (0, 3).into(),
+                (1, 0).into(),
+                (1, 1).into(),
+                (1, 2).into(),
+                (1, 3).into(),
+                (2, 0).into(),
+                (2, 1).into(),
+                (2, 2).into(),
+                (2, 3).into(),
+                (3, 0).into(),
+                (3, 1).into(),
+                (3, 2).into(),
+                (3, 3).into()
             ])
         );
         let field = Field::from([[f, f, f, f], [n, n, n, n], [n, n, n, n], [n, n, n, n]]);
         assert_eq!(
             field.possible_moves(),
             Some(vec![
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 1),
-                (1, 2),
-                (1, 3),
-                (2, 1),
-                (2, 2),
-                (2, 3),
-                (3, 1),
-                (3, 2),
-                (3, 3)
+                (0, 1).into(),
+                (0, 2).into(),
+                (0, 3).into(),
+                (1, 1).into(),
+                (1, 2).into(),
+                (1, 3).into(),
+                (2, 1).into(),
+                (2, 2).into(),
+                (2, 3).into(),
+                (3, 1).into(),
+                (3, 2).into(),
+                (3, 3).into()
             ])
         );
         let field = Field::from([[f, n, n, n], [n, f, n, n], [n, n, f, n], [n, n, n, f]]);
         assert_eq!(
             field.possible_moves(),
             Some(vec![
-                (0, 1),
-                (0, 2),
-                (0, 3),
-                (1, 0),
-                (1, 2),
-                (1, 3),
-                (2, 0),
-                (2, 1),
-                (2, 3),
-                (3, 0),
-                (3, 1),
-                (3, 2),
+                (0, 1).into(),
+                (0, 2).into(),
+                (0, 3).into(),
+                (1, 0).into(),
+                (1, 2).into(),
+                (1, 3).into(),
+                (2, 0).into(),
+                (2, 1).into(),
+                (2, 3).into(),
+                (3, 0).into(),
+                (3, 1).into(),
+                (3, 2).into(),
             ])
         );
         let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, n]]);
-        assert_eq!(field.possible_moves(), Some(vec![(3, 3),]));
+        assert_eq!(field.possible_moves(), Some(vec![(3, 3).into(),]));
         let field = Field::from([[f, f, f, f], [f, f, f, f], [f, f, f, f], [f, f, f, t]]);
         assert_eq!(field.possible_moves(), None);
     }
@@ -215,22 +218,10 @@ mod test_brute_force {
         assert_eq!(
             field.possible_non_symmetrical_moves(),
             Some(vec![
-                (0, 0),
-                (0, 1),
-                // (0, 2),
-                // (0, 3),
-                (1, 0),
-                (1, 1),
-                // (1, 2),
-                // (1, 3),
-                // (2, 0),
-                // (2, 1),
-                // (2, 2),
-                // (2, 3),
-                // (3, 0),
-                // (3, 1),
-                // (3, 2),
-                // (3, 3)
+                (0, 0).into(),
+                (0, 1).into(),
+                (1, 0).into(),
+                (1, 1).into(),
             ])
         );
     }
