@@ -7,6 +7,7 @@ use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 use std::collections::HashMap;
 
+/// TODO: Computer just gives up when it knows it loses
 pub struct ComputerPlayer {
     player: bool,
 }
@@ -16,7 +17,7 @@ impl GamePlayer for ComputerPlayer {
     }
 
     fn make_move(&self, field: &crate::field::Field) -> Position {
-        let mut f = field.clone();
+        let mut f = *field;
         match f.possible_non_symmetrical_moves() {
             Some(moves) => {
                 self.get_best_move(&mut f, &moves)
@@ -31,7 +32,7 @@ impl GamePlayer for ComputerPlayer {
 }
 impl ComputerPlayer {
     /// This is just a reimplementation of [Field::brute_force_game_state_recursivly].
-    fn get_best_move(&self, field: &mut Field, moves: &Vec<Position>) -> Position {
+    fn get_best_move(&self, field: &mut Field, moves: &[Position]) -> Position {
         let move_selector = Field::possible_moves;
         let mut game_cash = HashMap::new();
         let best_move: NextBestMove = (

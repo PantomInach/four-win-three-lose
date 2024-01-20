@@ -73,6 +73,7 @@ impl GameResult {
     }
 
     pub(crate) fn better_eq_for_player(&self, other: &GameResult, evaluate_for: bool) -> bool {
+        #[allow(clippy::if_same_then_else)]
         if self == other {
             true
         } else if self == &GameResult::from(evaluate_for) {
@@ -214,6 +215,7 @@ impl Field {
         if let Some(p) = [(0, 0), (0, 1), (1, 0), (1, 1)]
             .into_iter()
             .find_map(|(dx, dy)| {
+                #[allow(clippy::if_same_then_else)]
                 if self.field[1 + dy][1 + dx].is_some()
                     && self.field[1 + dy][1 + dx] == self.field[dy][dx]
                     && self.field[1 + dy][1 + dx] == self.field[2 + dy][2 + dx]

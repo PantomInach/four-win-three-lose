@@ -9,7 +9,7 @@ impl BoardVisualizer for TerminalVisualizer {
             .iter()
             .enumerate()
             .for_each(|(i, [a, b, c, d])| {
-                print_field_row(Some(i), to_char(a), to_char(b), to_char(c), to_char(&d));
+                print_field_row(Some(i), to_char(a), to_char(b), to_char(c), to_char(d));
                 if i != 3 {
                     print_spacer();
                 }
