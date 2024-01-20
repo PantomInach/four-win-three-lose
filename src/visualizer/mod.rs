@@ -1,8 +1,8 @@
 use crate::field::{Field, GameResult};
 
-mod terminal;
+pub mod terminal;
 
-pub(crate) trait BoardVisualizer {
+pub trait BoardVisualizer {
     fn draw_field(&self, field: &Field);
 
     fn players_turn(&self, player_turn: bool);

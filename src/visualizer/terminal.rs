@@ -1,6 +1,6 @@
 use super::BoardVisualizer;
 
-struct TerminalVisualizer {}
+pub struct TerminalVisualizer {}
 impl BoardVisualizer for TerminalVisualizer {
     fn draw_field(&self, field: &crate::field::Field) {
         coordinate_header();

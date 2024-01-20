@@ -4,9 +4,9 @@ use field::GameResult;
 
 mod brute_force_field;
 pub mod field;
-mod gamelogic;
-mod player;
-mod visualizer;
+pub mod gamelogic;
+pub mod player;
+pub mod visualizer;
 
 // Changing these values will break the current implementations of [winner] and [loser].
 pub const FIELD_X: usize = 4;

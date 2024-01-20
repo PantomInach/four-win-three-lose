@@ -7,7 +7,7 @@ use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 use std::collections::HashMap;
 
-struct ComputerPlayer {
+pub struct ComputerPlayer {
     player: bool,
 }
 impl GamePlayer for ComputerPlayer {
@@ -25,7 +25,7 @@ impl GamePlayer for ComputerPlayer {
         }
     }
 
-    fn invalid_move(&self, field: &Field, pos: Position) {
+    fn invalid_move(&self, _: &Field, _: Position) {
         panic!("The computer can't make an invalid move.")
     }
 }
