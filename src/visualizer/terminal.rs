@@ -1,4 +1,5 @@
 use super::BoardVisualizer;
+use crate::GameResult;
 
 pub struct TerminalVisualizer {}
 impl BoardVisualizer for TerminalVisualizer {
@@ -25,7 +26,7 @@ impl BoardVisualizer for TerminalVisualizer {
         println!("\n");
     }
 
-    fn display_result(&self, result: crate::field::GameResult) {
+    fn display_result(&self, result: GameResult) {
         println!("{}", result);
     }
 }

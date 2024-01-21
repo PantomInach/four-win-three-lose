@@ -1,10 +1,8 @@
 use log::warn;
 
 use crate::{
-    field::{Field, GameResult},
-    player::GamePlayer,
-    visualizer::BoardVisualizer,
-    Position, FIELD_X, FIELD_Y,
+    field::Field, player::GamePlayer, visualizer::BoardVisualizer, GameResult, Position, FIELD_X,
+    FIELD_Y,
 };
 
 #[derive(PartialEq, Eq)]

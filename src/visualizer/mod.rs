@@ -1,4 +1,5 @@
-use crate::field::{Field, GameResult};
+use crate::field::Field;
+use crate::GameResult;
 
 pub mod terminal;
 

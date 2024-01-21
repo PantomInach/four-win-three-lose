@@ -1,6 +1,6 @@
 use super::GamePlayer;
-use crate::field::GameResult;
 use crate::player::Field;
+use crate::GameResult;
 use crate::NextBestMove;
 use crate::Position;
 use itertools::FoldWhile::{Continue, Done};
