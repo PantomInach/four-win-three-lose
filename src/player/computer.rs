@@ -7,7 +7,6 @@ use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
 use std::collections::HashMap;
 
-/// TODO: Computer just gives up when it knows it loses
 pub struct ComputerPlayer {
     player: bool,
 }
@@ -38,25 +37,29 @@ impl ComputerPlayer {
         let best_move: NextBestMove = (
             (0, 0).into(),
             GameResult::from(self.player).opposite_player(),
+            0,
         );
 
         moves
             .iter()
-            .fold_while(best_move, |(best_pos, game_res), pos| {
+            .fold_while(best_move, |(best_pos, game_res, depth), pos| {
                 let _ = field.set(pos.x, pos.y, self.player);
                 let rec_res = field.brute_force_game_state_recursivly(
                     !self.player,
                     !self.player,
                     &move_selector,
                     &mut game_cash,
+                    field.set_pieces(),
                 );
                 let _ = field.force_set(pos.x, pos.y, None);
-                if rec_res == GameResult::from(self.player) {
-                    Done((*pos, rec_res))
-                } else if rec_res.better_eq_for_player(&game_res, self.player) {
-                    Continue((*pos, rec_res))
+                if rec_res.0 == GameResult::from(self.player) {
+                    Done((*pos, rec_res.0, rec_res.1))
+                } else if rec_res.0 == GameResult::Draw {
+                    Continue((*pos, rec_res.0, rec_res.1))
+                } else if rec_res.1 > depth {
+                    Continue((*pos, rec_res.0, rec_res.1))
                 } else {
-                    Continue((best_pos, game_res))
+                    Continue((best_pos, game_res, depth))
                 }
             })
             .into_inner()

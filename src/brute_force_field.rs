@@ -74,7 +74,9 @@ impl Field {
             player_turn,
             move_selector,
             &mut HashMap::new(),
+            0,
         )
+        .0
     }
 
     pub(crate) fn brute_force_game_state_recursivly<F>(
@@ -83,55 +85,55 @@ impl Field {
         player_turn: bool,
         move_selector: &F,
         game_cash: &mut HashMap<[[Option<bool>; FIELD_X]; FIELD_Y], GameResult>,
-    ) -> GameResult
+        nth_move: usize,
+    ) -> (GameResult, usize)
     where
         F: Fn(&Field) -> Option<Vec<Position>>,
     {
         if let Some(winner) = self.winner() {
-            return GameResult::from(winner);
+            return (GameResult::from(winner), nth_move);
         }
         if let Some(loser) = self.loser() {
-            return GameResult::from(loser).opposite_player();
+            return (GameResult::from(loser).opposite_player(), nth_move);
         }
 
         if let Some(res) = game_cash.get(&self.field) {
-            return *res;
+            return (*res, nth_move);
         }
 
         let best_move: NextBestMove = (
             (0, 0).into(),
             GameResult::from(evaluate_for).opposite_player(),
+            0,
         );
 
-        let res = match move_selector(self) {
-            None => GameResult::Draw,
-            Some(possible_moves) => {
-                possible_moves
-                    .iter()
-                    .fold_while(best_move, |(best_pos, game_res), pos| {
-                        let _ = self.set(pos.x, pos.y, player_turn);
-                        let rec_res = self.brute_force_game_state_recursivly(
-                            !evaluate_for,
-                            !player_turn,
-                            move_selector,
-                            game_cash,
-                        );
-                        let _ = self.force_set(pos.x, pos.y, None);
+        let res: (Position, GameResult, usize) = match move_selector(self) {
+            None => ((0, 0).into(), GameResult::Draw, nth_move + 1),
+            Some(possible_moves) => possible_moves
+                .iter()
+                .fold_while(best_move, |(best_pos, game_res, depth), pos| {
+                    let _ = self.set(pos.x, pos.y, player_turn);
+                    let rec_res = self.brute_force_game_state_recursivly(
+                        !evaluate_for,
+                        !player_turn,
+                        move_selector,
+                        game_cash,
+                        nth_move + 1,
+                    );
+                    let _ = self.force_set(pos.x, pos.y, None);
 
-                        if rec_res == GameResult::from(evaluate_for) {
-                            Done((*pos, rec_res))
-                        } else if rec_res.better_eq_for_player(&game_res, evaluate_for) {
-                            Continue((*pos, rec_res))
-                        } else {
-                            Continue((best_pos, game_res))
-                        }
-                    })
-                    .into_inner()
-                    .1
-            }
+                    if rec_res.0 == GameResult::from(evaluate_for) {
+                        Done((*pos, rec_res.0, rec_res.1))
+                    } else if rec_res.0.better_eq_for_player(&game_res, evaluate_for) {
+                        Continue((*pos, rec_res.0, rec_res.1))
+                    } else {
+                        Continue((best_pos, game_res, depth))
+                    }
+                })
+                .into_inner(),
         };
-        game_cash.insert(self.field, res);
-        res
+        game_cash.insert(self.field, res.1);
+        (res.1, res.2)
     }
 }
 
