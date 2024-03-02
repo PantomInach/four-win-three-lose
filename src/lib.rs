@@ -3,6 +3,7 @@ use std::fmt::Display;
 mod brute_force_field;
 pub mod field;
 pub mod gamelogic;
+pub mod gui;
 pub mod player;
 pub mod visualizer;
 

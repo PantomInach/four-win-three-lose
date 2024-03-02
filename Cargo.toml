@@ -16,5 +16,6 @@ harness = false
 debug = true
 
 [dependencies]
+eframe = "0.26.2"
 itertools = "0.12.0"
 log = "0.4.20"
