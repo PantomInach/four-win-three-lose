@@ -54,6 +54,13 @@ where
         }
     }
 
+    fn player_move_invalid(&self, pos: Position) {
+        match self.player_turn {
+            false => self.player_one.invalid_move(&self.board, pos),
+            true => self.player_two.invalid_move(&self.board, pos),
+        };
+    }
+
     fn update_board(&self) {
         self.visualizer.draw_field(&self.board);
         self.visualizer.players_turn(self.player_turn);
@@ -96,6 +103,7 @@ where
                     "Player {} tried to make the move {} but got the error: {}",
                     self.player_turn, player_move, err
                 );
+                self.player_move_invalid(player_move);
                 continue;
             }
 

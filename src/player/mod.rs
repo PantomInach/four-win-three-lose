@@ -2,6 +2,7 @@ use crate::field::Field;
 use crate::Position;
 
 pub mod computer;
+pub mod human_terminal;
 
 pub trait GamePlayer {
     fn new(player: bool) -> Self;

@@ -11,6 +11,7 @@ pub const FIELD_X: usize = 4;
 pub const FIELD_Y: usize = 4;
 
 pub(crate) type NextBestMove = (Position, GameResult, usize);
+
 /// Position contains (x-coordinate, y-coordinate).
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position {

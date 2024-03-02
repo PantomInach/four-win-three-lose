@@ -40,7 +40,7 @@ fn to_char(field_item: &Option<bool>) -> char {
 }
 
 fn coordinate_header() {
-    println!("    0 1 2 3");
+    println!("   0 1 2 3");
 }
 
 fn print_field_row(line_num: Option<usize>, a: char, b: char, c: char, d: char) {

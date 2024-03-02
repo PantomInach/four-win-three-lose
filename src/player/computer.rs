@@ -15,7 +15,7 @@ impl GamePlayer for ComputerPlayer {
         ComputerPlayer { player }
     }
 
-    fn make_move(&self, field: &crate::field::Field) -> Position {
+    fn make_move(&self, field: &Field) -> Position {
         let mut f = *field;
         match f.possible_non_symmetrical_moves() {
             Some(moves) => {
