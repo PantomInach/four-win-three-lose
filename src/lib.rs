@@ -25,6 +25,24 @@ impl From<(usize, usize)> for Position {
         }
     }
 }
+/// Tries to transforme a [String] of expected pattern "x y" into a [Position].
+impl TryFrom<String> for Position {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if let Some((x_str, y_str)) = value.trim().split_once(" ") {
+            let x_res = x_str.parse::<usize>();
+            let y_res = y_str.parse::<usize>();
+            match (x_res, y_res) {
+                (Ok(x), Ok(y)) => Ok(Position { x, y }),
+                (Err(_), _) => Err(format!("Can't parse value '{}'", x_str)),
+                (_, Err(_)) => Err(format!("Can't parse value '{}'", y_str)),
+            }
+        } else {
+            Err(format!("Can't split string '{}'", value))
+        }
+    }
+}
 impl Display for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
@@ -82,5 +100,22 @@ impl GameResult {
         } else {
             other == &GameResult::from(evaluate_for).opposite_player()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Position;
+
+    #[test]
+    fn position_try_from_string() {
+        assert_eq!(
+            Position::try_from("1 0".to_string()),
+            Ok(Position { x: 1, y: 0 })
+        );
+        assert_eq!(
+            Position::try_from("1 0\n".to_string()),
+            Ok(Position { x: 1, y: 0 })
+        );
     }
 }
