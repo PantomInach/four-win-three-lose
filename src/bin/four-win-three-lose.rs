@@ -10,26 +10,27 @@ use four_win_three_lose::visualizer::terminal::TerminalVisualizer;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum GameMode {
+    /// Play inside a graphical user interface.
+    GUI,
     /// Run game in terminal. Human VS Human
     TermHVsH,
     /// Run game in terminal. Computer VS Human
     TermCVsH,
     /// Run game in terminal. Human VS Computer
     TermHVsC,
-    /// Play inside a graphical user interface.
-    GUI,
 }
 
 /// Simple Tic-Tac-Toe inspired game on a 4x4 field. If you have four in a row, you win. If you have three in a row, you lose.
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
-    game_mode: Option<GameMode>,
+    #[arg(value_enum, default_value_t = GameMode::GUI)]
+    game_mode: GameMode,
 }
 
 fn main() {
     let args = Args::parse();
-    match args.game_mode.unwrap_or(GameMode::GUI) {
+    match args.game_mode {
         GameMode::TermHVsH => {
             start_terminal_game(HumanTerminal::new(false), HumanTerminal::new(true))
         }
