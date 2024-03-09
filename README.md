@@ -18,3 +18,7 @@ Per default, a GUI version is started. Optional you can also play in the termina
 | In Terminal: Human VS Human | `term-h-vs-h`|
 | In Terminal: Computer VS Human | `term-c-vs-h`|
 | In Terminal: Human VS Computer | `term-h-vs-c`|
+
+# TODOs
+[ ] Make the computer more resilient against losing
+[ ] Make terminal and gui easier on the eyes
