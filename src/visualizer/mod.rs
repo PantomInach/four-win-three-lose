@@ -4,9 +4,9 @@ use crate::GameResult;
 pub mod terminal;
 
 pub trait BoardVisualizer {
-    fn draw_field(&self, field: &Field);
+    fn draw_field(&mut self, field: &Field);
 
-    fn players_turn(&self, player_turn: bool);
+    fn players_turn(&mut self, player_turn: bool);
 
-    fn display_result(&self, result: GameResult);
+    fn display_result(&mut self, result: GameResult);
 }

@@ -1,15 +1,7 @@
 use log::warn;
 
-use crate::{
-    field::Field, player::GamePlayer, visualizer::BoardVisualizer, GameResult, Position, FIELD_X,
-    FIELD_Y,
-};
-
-#[derive(PartialEq, Eq)]
-enum GameState {
-    Finished(GameResult),
-    InProgress,
-}
+use super::GameState;
+use crate::{field::Field, player::GamePlayer, visualizer::BoardVisualizer, Position};
 
 pub struct GameHandler<P1, P2, V>
 where
@@ -47,7 +39,7 @@ where
     P2: GamePlayer,
     V: BoardVisualizer,
 {
-    fn get_player_move(&self) -> Position {
+    fn get_player_move(&mut self) -> Position {
         match self.player_turn {
             false => self.player_one.make_move(&self.board),
             true => self.player_two.make_move(&self.board),
@@ -61,12 +53,12 @@ where
         };
     }
 
-    fn update_board(&self) {
+    fn update_board(&mut self) {
         self.visualizer.draw_field(&self.board);
         self.visualizer.players_turn(self.player_turn);
     }
 
-    fn display_winner(&self) {
+    fn display_winner(&mut self) {
         match self.game_state {
             GameState::Finished(result) => self.visualizer.display_result(result),
             GameState::InProgress => panic!("Can't display the game result of a game in progress."),
@@ -80,15 +72,7 @@ where
     }
 
     fn get_board_state(&self) -> GameState {
-        if let Some(player) = self.board.winner() {
-            GameState::Finished(GameResult::from(player))
-        } else if let Some(player) = self.board.loser() {
-            GameState::Finished(GameResult::from(player).opposite_player())
-        } else if self.board.set_pieces() == FIELD_X * FIELD_Y {
-            GameState::Finished(GameResult::Draw)
-        } else {
-            GameState::InProgress
-        }
+        GameState::from(&self.board)
     }
 
     pub fn play(&mut self) {

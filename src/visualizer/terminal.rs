@@ -3,7 +3,7 @@ use crate::GameResult;
 
 pub struct TerminalVisualizer {}
 impl BoardVisualizer for TerminalVisualizer {
-    fn draw_field(&self, field: &crate::field::Field) {
+    fn draw_field(&mut self, field: &crate::field::Field) {
         coordinate_header();
         field
             .field
@@ -17,7 +17,7 @@ impl BoardVisualizer for TerminalVisualizer {
             });
     }
 
-    fn players_turn(&self, player_turn: bool) {
+    fn players_turn(&mut self, player_turn: bool) {
         println!("\n");
         match player_turn {
             false => println!("It's player one's turn..."),
@@ -26,7 +26,7 @@ impl BoardVisualizer for TerminalVisualizer {
         println!("\n");
     }
 
-    fn display_result(&self, result: GameResult) {
+    fn display_result(&mut self, result: GameResult) {
         println!("{}", result);
     }
 }
