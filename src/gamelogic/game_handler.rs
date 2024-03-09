@@ -39,6 +39,10 @@ where
     P2: GamePlayer,
     V: BoardVisualizer,
 {
+    pub fn new(player_one: P1, player_two: P2, visualizer: V) -> Self {
+        (player_one, player_two, visualizer).into()
+    }
+
     fn get_player_move(&mut self) -> Position {
         match self.player_turn {
             false => self.player_one.make_move(&self.board),
