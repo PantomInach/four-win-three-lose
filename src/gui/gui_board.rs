@@ -18,45 +18,78 @@ pub struct GuiBoard {
     game_state: GameState,
     player_one: Player,
     player_two: Player,
+    in_main_menu: bool,
 }
 impl eframe::App for GuiBoard {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if self.game_state == GameState::InProgress {
-            self.handle_computer_player();
-        }
-
-        egui::CentralPanel::default().show(ctx, |central_ui| {
-            central_ui.label(players_turn(self.player_turn));
-            central_ui.vertical_centered(|ui| {
-                egui::Grid::new("id").show(ui, |grid_ui| {
-                    for y in 0..FIELD_Y {
-                        for x in 0..FIELD_X {
-                            let button = grid_ui.add_sized(
-                                [40.0, 40.0],
-                                Button::new(item_to_string(&self.field.field[y][x])),
-                            );
-                            if self.game_state == GameState::InProgress
-                                && button.clicked()
-                                && self.field.field[y][x].is_none()
-                            {
-                                self.handle_button_press(x, y);
-                            }
-                        }
-                        grid_ui.end_row();
+        // Main menu
+        if self.in_main_menu {
+            egui::CentralPanel::default().show(ctx, |main_ui| {
+                main_ui.vertical_centered(|ui_options| {
+                    ui_options.label("4 Win 3 Lose");
+                    if ui_options.button("Human VS Human").clicked() {
+                        self.in_main_menu = false;
+                        self.player_one = Player::Human;
+                        self.player_two = Player::Human;
+                    } else if ui_options.button("Human VS Computer").clicked() {
+                        self.in_main_menu = false;
+                        self.player_one = Player::Human;
+                        self.player_two = Player::Computer(ComputerPlayer::new(true));
+                    } else if ui_options.button("Computer VS Human").clicked() {
+                        self.in_main_menu = false;
+                        self.player_one = Player::Computer(ComputerPlayer::new(false));
+                        self.player_two = Player::Human;
+                    } else if ui_options.button("Exit").clicked() {
+                        ui_options
+                            .ctx()
+                            .send_viewport_cmd(egui::ViewportCommand::Close);
                     }
                 })
             });
-        });
-
-        if let GameState::Finished(result) = self.game_state {
-            egui::Window::new(result.to_string())
-                .collapsible(false)
-                .resizable(false)
-                .show(ctx, |ui| {
-                    if ui.button("Ok").clicked() {
-                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                    }
+        } else if !self.in_main_menu {
+            // Make computer move if needed.
+            if self.game_state == GameState::InProgress {
+                self.handle_computer_player();
+            }
+            // Build board panel and provides its buttons
+            egui::CentralPanel::default().show(ctx, |central_ui| {
+                central_ui.label(players_turn(self.player_turn));
+                central_ui.vertical_centered(|ui| {
+                    egui::Grid::new("id").show(ui, |grid_ui| {
+                        // Iterate over all field entries and build their button
+                        for y in 0..FIELD_Y {
+                            for x in 0..FIELD_X {
+                                let button = grid_ui.add_sized(
+                                    [40.0, 40.0],
+                                    Button::new(item_to_string(&self.field.field[y][x])),
+                                );
+                                if self.game_state == GameState::InProgress
+                                    && button.clicked()
+                                    && self.field.field[y][x].is_none()
+                                {
+                                    self.handle_button_press(x, y);
+                                }
+                            }
+                            grid_ui.end_row();
+                        }
+                    })
                 });
+            });
+            // Checks if game is finished and shows game result
+            if let GameState::Finished(result) = self.game_state {
+                egui::Window::new(result.to_string())
+                    .collapsible(false)
+                    .resizable(false)
+                    .show(ctx, |ui| {
+                        if ui.button("Exit").clicked() {
+                            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                        } else if ui.button("To Main Menu").clicked() {
+                            self.reset(true);
+                        } else if ui.button("Restart").clicked() {
+                            self.reset(false);
+                        }
+                    });
+            }
         }
         if ctx.input(|i| i.viewport().close_requested()) {
             // The application will be closed.
@@ -71,6 +104,7 @@ impl Default for GuiBoard {
             game_state: GameState::InProgress,
             player_one: Player::Human,
             player_two: Player::Human,
+            in_main_menu: true,
         }
     }
 }
@@ -82,6 +116,7 @@ impl GuiBoard {
             game_state: GameState::InProgress,
             player_one,
             player_two,
+            in_main_menu: false,
         }
     }
 
@@ -109,6 +144,13 @@ impl GuiBoard {
         self.game_state = GameState::from(&self.field).into();
 
         self.player_turn = !self.player_turn;
+    }
+
+    fn reset(&mut self, into_menu: bool) {
+        self.game_state = GameState::InProgress;
+        self.field = Field::new();
+        self.player_turn = false;
+        self.in_main_menu = into_menu;
     }
 }
 
